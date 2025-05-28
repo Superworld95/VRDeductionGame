@@ -1,0 +1,2 @@
+D:\Unity Games by retr0zo0m\Unity Games by retr0zo0m Unity\VR fr fr\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+D:\Unity Games by retr0zo0m\Unity Games by retr0zo0m Unity\VR fr fr\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
