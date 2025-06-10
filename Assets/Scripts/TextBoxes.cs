@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Windows;
 
 public class TextBoxes : MonoBehaviour
 {
@@ -65,7 +66,7 @@ public class TextBoxes : MonoBehaviour
         if (textCrawl > 0)
         {
             textCrawl -= textSpeed;
-            scrollingText = textReference.Substring(0, Mathf.FloorToInt(textCrawlC -textCrawl));
+            scrollingText = textReference.Substring(0, Mathf.FloorToInt(textCrawlC - textCrawl));
             dialogueBox.text = scrollingText;
 
             //Add a sound if you want to.
@@ -81,126 +82,155 @@ public class TextBoxes : MonoBehaviour
 
 
         //Add inputs here. The first is to speed up text, the second is to fill out the text.
-        /*
-        if (textCrawl > 0) {
-        if ()
-        {
-            textSpeed = 2*textSpeedC;
-        } else
-        {
-            textSpeed = textSpeedC;
-        }
-        if ()
-        {
-            textCrawl = 1;
-        }
-        } else {
-        
-        //If the text has concluded, the same inputs should advance to the next text, unless there are prompts of course.
-        if (( || ) && !promptsActive) {
 
-        dialogueTextID++;
-        
-        switch (dialogueTextID) //Your conditionals for all the text can occur here such as a counter.
-        case 0: //In each case you have to change all prompts. Either write to or hide/unhide each of these.
-            WriteText("INSERT DIALOGUE HERE");
-            HideDialogue(false);
-            WritePromptA("");
-            HidePromptA(true);
-            WritePromptB("");
-            HidePromptB(true);
-            WritePromptC("");
-            HidePromptC(true);
-            promptsActive = false;
-            break;
-        case 1:
-            WriteText("YOU CAN HAVE DIALOGUE AND PROMPTS AT THE SAME TIME");
-            HideDialogue(false);
-            WritePromptA("Oh");
-            HidePromptA(false);
-            WritePromptB("Eh");
-            HidePromptB(false);
-            WritePromptC("That's boring!");
-            HidePromptC(false);
-            promptsActive = true;
-            break;
-        case 2:
-        WriteText("YOU CAN HAVE DIALOGUE AND PROMPTS AT THE SAME TIME");
-            HideDialogue(false);
-            WritePromptA("Oh");
-            HidePromptA(false);
-            WritePromptB("Eh");
-            HidePromptB(false);
-            WritePromptC("That's boring!");
-            HidePromptC(false);
-            promptsActive = true;
-        break;
-        case 3: //If there were prompts in the PREVIOUS message, they are checked for here to display different text.
-        switch(pressedButtonID) {
-            case 0: WriteText("This text should not appear."); break;
-        case 1: WriteText("INSERT PROMPT A RESPONSE HERE"); //You can also do things to other variables like obtaining items bools or anything.
-            HideDialogue(false); //You can do nested prompts, just set the dialoguePathID and track that in a nested switchcase in the next messages.
-            WritePromptA("");
-            HidePromptA(true);
-            WritePromptB("");
-            HidePromptB(true);
-            WritePromptC("");
-            HidePromptC(true);
-            promptsActive = false;
-        break;
-        case 2: WriteText("INSERT PROMPT B RESPONSE HERE");
-            HideDialogue(false);.
-            WritePromptA("");
-            HidePromptA(true);
-            WritePromptB("");
-            HidePromptB(true);
-            WritePromptC("");
-            HidePromptC(true);
-            promptsActive = false;
-        break;
-        case 3: WriteText("INSERT PROMPT C RESPONSE HERE");
-            HideDialogue(false);
-            WritePromptA("");
-            HidePromptA(true);
-            WritePromptB("");
-            HidePromptB(true);
-            WritePromptC("");
-            HidePromptC(true);
-            promptsActive = false;
-        break;
-        }
-        break;
-        case 4: 
-
-        switch(pressedButtonID) {
-            case 0: WriteText("This text should not appear."); break;
-        case 1: 
-        switch (dialoguePathID) {
-            case 1: //Copy over all the settings, I'm leaving this blank to save space.
-            case 2:
-            case 3:
-        }
-        break;
-        case 2:
-        switch (dialoguePathID) {
-            case 1:
-            case 2:
-            case 3:
-        }
-        break;
-        case 3:
-        switch (dialoguePathID) {
-            case 1:
-            case 2:
-            case 3:
-        }
-        break;
-        case 5: pressedButtonID = 0; //Set pressedButtonID to 0 when you are DONE with a nested prompt. If you need a nested prompt within a nested prompt, you need another ID variable and so on.
-        break;
-        case 6: break;
-        case 7: break;
+        if (textCrawl > 0)
+        {
+            if (UnityEngine.Input.GetKeyDown(KeyCode.A))
+            {
+                textSpeed = 2 * textSpeedC;
             }
-        }*/
+            else
+            {
+                textSpeed = textSpeedC;
+            }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.S))
+            {
+                textCrawl = 1;
+            }
+        }
+        else
+        {
+
+            //If the text has concluded, the same inputs should advance to the next text, unless there are prompts of course.
+            if ((UnityEngine.Input.GetKeyDown(KeyCode.A) || UnityEngine.Input.GetKeyDown(KeyCode.S)) && !promptsActive)
+            {
+
+                dialogueTextID++;
+
+                switch (dialogueTextID) //Your conditionals for all the text can occur here such as a counter.
+                {
+                    case 0: //In each case you have to change all prompts. Either write to or hide/unhide each of these.
+                        WriteText("INSERT DIALOGUE HERE");
+                        HideDialogue(false);
+                        WritePromptA("");
+                        HidePromptA(true);
+                        WritePromptB("");
+                        HidePromptB(true);
+                        WritePromptC("");
+                        HidePromptC(true);
+                        promptsActive = false;
+                        break;
+                    case 1:
+                        WriteText("YOU CAN HAVE DIALOGUE AND PROMPTS AT THE SAME TIME");
+                        HideDialogue(false);
+                        WritePromptA("Oh");
+                        HidePromptA(false);
+                        WritePromptB("Eh");
+                        HidePromptB(false);
+                        WritePromptC("That's boring!");
+                        HidePromptC(false);
+                        promptsActive = true;
+                        break;
+                    case 2:
+                        WriteText("YOU CAN HAVE DIALOGUE AND PROMPTS AT THE SAME TIME");
+                        HideDialogue(false);
+                        WritePromptA("Oh");
+                        HidePromptA(false);
+                        WritePromptB("Eh");
+                        HidePromptB(false);
+                        WritePromptC("That's boring!");
+                        HidePromptC(false);
+                        promptsActive = true;
+                        break;
+                    case 3: //If there were prompts in the PREVIOUS message, they are checked for here to display different text.
+                        switch (pressedButtonID)
+                        {
+                            case 0: WriteText("This text should not appear."); break;
+                            case 1:
+                                WriteText("INSERT PROMPT A RESPONSE HERE"); //You can also do things to other variables like obtaining items bools or anything.
+                                HideDialogue(false); //You can do nested prompts, just set the dialoguePathID and track that in a nested switchcase in the next messages.
+                                WritePromptA("");
+                                HidePromptA(true);
+                                WritePromptB("");
+                                HidePromptB(true);
+                                WritePromptC("");
+                                HidePromptC(true);
+                                promptsActive = false;
+                                break;
+                            case 2:
+                                WriteText("INSERT PROMPT B RESPONSE HERE");
+                                HideDialogue(false);
+                                WritePromptA("");
+                                HidePromptA(true);
+                                WritePromptB("");
+                                HidePromptB(true);
+                                WritePromptC("");
+                                HidePromptC(true);
+                                promptsActive = false;
+                                break;
+                            case 3:
+                                WriteText("INSERT PROMPT C RESPONSE HERE");
+                                HideDialogue(false);
+                                WritePromptA("");
+                                HidePromptA(true);
+                                WritePromptB("");
+                                HidePromptB(true);
+                                WritePromptC("");
+                                HidePromptC(true);
+                                promptsActive = false;
+                                break;
+                        }
+                        break;
+                    case 4:
+
+                        switch (pressedButtonID)
+                        {
+                            case 0: WriteText("This text should not appear."); break;
+                            case 1:
+                                switch (dialoguePathID)
+                                {
+                                    case 1: //Copy over all the settings, I'm leaving this blank to save space.
+                                        break;
+                                    case 2:
+                                        break;
+                                    case 3:
+                                        break;
+                                }
+                                break;
+                            case 2:
+                                switch (dialoguePathID)
+                                {
+                                    case 1:
+                                        break;
+                                    case 2:
+                                        break;
+                                    case 3:
+                                        break;
+                                }
+                                break;
+                            case 3:
+                                switch (dialoguePathID)
+                                {
+                                    case 1:
+                                        break;
+                                    case 2:
+                                        break;
+                                    case 3:
+                                        break;
+                                }
+                                break;
+                        }
+                        break;
+                    case 5:
+                        pressedButtonID = 0; //Set pressedButtonID to 0 when you are DONE with a nested prompt. If you need a nested prompt within a nested prompt, you need another ID variable and so on.
+                        break;
+                    case 6: break;
+                    case 7: break;
+
+
+                }
+            }
+        }
     }
 
     public void WriteText(string textContents)
