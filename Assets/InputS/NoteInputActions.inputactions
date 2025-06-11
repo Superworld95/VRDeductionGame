@@ -1,0 +1,45 @@
+{
+    "name": "NoteInputActions",
+    "maps": [
+        {
+            "name": "Note Interaction",
+            "id": "027d9d91-ba6d-442f-becd-6cf42d975bec",
+            "actions": [
+                {
+                    "name": "Read Note",
+                    "type": "Button",
+                    "id": "aa91f49d-2d7a-40f5-a29a-dcb7b55dc577",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "05385bf2-7b8f-484f-b6b2-d2efb45de187",
+                    "path": "<XRController>/{PrimaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Read Note",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "88841aa7-c0ae-4db6-a413-94b15d647f3a",
+                    "path": "<Keyboard>/#(E)",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Read Note",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

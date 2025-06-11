@@ -1,315 +1,195 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using UnityEngine.Windows;
 
 public class TextBoxes : MonoBehaviour
 {
     public TMP_Text dialogueBox, promptABox, promptBBox, promptCBox;
-    float textCrawl = 0, textCrawlC = 0, textSpeed = 0.4f, textSpeedC = 0.4f;
-    string textReference = "", scrollingText = "";
     public Button buttonA, buttonB, buttonC;
-    bool promptsActive = false;
-    int pressedButtonID = 0;
     public AudioSource textBlipSFX, pressButtonASFX, pressButtonBSFX, pressButtonCSFX;
-    int textBlipInterval1 = 0, textBlipInterval2 = 0;
-    //bool promptAPressed = false, promptBPressed = false, promptCPressed = false;
 
-    int dialogueTextID = 0, dialoguePathID = 0, dialoguePathID2 = 0; //Use these if you plan to fit all of the dialogue in this script.
-     
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private InputAction nextAction, previousAction, interactAction;
+    private InputActionAsset inputActions;
+
+    private string[] dialogueLines = new string[]
     {
+        "Welcome to the interrogation room. You have three suspects to question: Brad, Sara, and Tom."
+    };
+    private int currentLine = 0;
+    private bool isTyping = false;
+    private Coroutine typingCoroutine;
+
+    private enum DialogueState { Dialogue, Choices }
+    private DialogueState state = DialogueState.Dialogue;
+
+    private int selectedButtonIndex = 0;
+    private Button[] buttons;
+    private AudioSource[] buttonSFX;
+    private Color defaultButtonColor;
+
+    void Awake()
+    {
+        inputActions = Resources.Load<InputActionAsset>("InputSystem_Actions");
+        nextAction = inputActions.FindAction("Next");
+        previousAction = inputActions.FindAction("Previous");
+        interactAction = inputActions.FindAction("Interact");
+
+        buttons = new Button[] { buttonA, buttonB, buttonC };
+        buttonSFX = new AudioSource[] { pressButtonASFX, pressButtonBSFX, pressButtonCSFX };
+
+        if (buttonA != null)
+            defaultButtonColor = buttonA.colors.normalColor;
+    }
+
+    void OnEnable()
+    {
+        nextAction.Enable();
+        previousAction.Enable();
+        interactAction.Enable();
+
+        nextAction.performed += OnNextPerformed;
+        previousAction.performed += OnPreviousPerformed;
+        interactAction.performed += OnInteractPerformed;
+
+        ShowNextLine();
+    }
+
+    void OnDisable()
+    {
+        nextAction.performed -= OnNextPerformed;
+        previousAction.performed -= OnPreviousPerformed;
+        interactAction.performed -= OnInteractPerformed;
+
+        nextAction.Disable();
+        previousAction.Disable();
+        interactAction.Disable();
+    }
+
+    private void OnNextPerformed(InputAction.CallbackContext context)
+    {
+        if (state == DialogueState.Choices)
+        {
+            selectedButtonIndex = (selectedButtonIndex + 1) % buttons.Length;
+            UpdateButtonSelection();
+        }
+        else if (!isTyping)
+        {
+            ShowNextLine();
+        }
+    }
+
+    private void OnPreviousPerformed(InputAction.CallbackContext context)
+    {
+        if (state == DialogueState.Choices)
+        {
+            selectedButtonIndex = (selectedButtonIndex - 1 + buttons.Length) % buttons.Length;
+            UpdateButtonSelection();
+        }
+    }
+
+    private void OnInteractPerformed(InputAction.CallbackContext context)
+    {
+        if (isTyping)
+        {
+            StopCoroutine(typingCoroutine);
+            dialogueBox.text = dialogueLines[currentLine - 1];
+            isTyping = false;
+            return;
+        }
+
+        if (state == DialogueState.Dialogue)
+        {
+            ShowNextLine();
+        }
+        else if (state == DialogueState.Choices)
+        {
+            buttonSFX[selectedButtonIndex]?.Play();
+            switch (selectedButtonIndex)
+            {
+                case 0: SelectOption("Accept", "You accepted the offer.", "Good luck with your mission."); break;
+                case 1: SelectOption("Decline", "You declined. Interesting choice.", "Let's see how this plays out."); break;
+                case 2: SelectOption("Maybe Later", "Undecided, huh?", "Take your time, but time is limited."); break;
+            }
+        }
+    }
+
+    private void ShowNextLine()
+    {
+        if (currentLine < dialogueLines.Length)
+        {
+            if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+            typingCoroutine = StartCoroutine(TypeLine(dialogueLines[currentLine]));
+            currentLine++;
+        }
+        else
+        {
+            EnterChoices();
+        }
+    }
+
+    private IEnumerator TypeLine(string line)
+    {
+        isTyping = true;
         dialogueBox.text = "";
+
+        foreach (char c in line)
+        {
+            dialogueBox.text += c;
+            if (textBlipSFX != null) textBlipSFX.Play();
+            yield return new WaitForSeconds(0.05f);
+        }
+
+        isTyping = false;
+    }
+
+    private void EnterChoices()
+    {
+        state = DialogueState.Choices;
+        selectedButtonIndex = 0;
+        UpdateButtonSelection();
+
+        SetChoicesActive(true);
+
+        promptABox.text = "Option A: Accept";
+        promptBBox.text = "Option B: Decline";
+        promptCBox.text = "Option C: Maybe Later";
+    }
+
+    private void HideChoices()
+    {
+        state = DialogueState.Dialogue;
+        SetChoicesActive(false);
         promptABox.text = "";
         promptBBox.text = "";
         promptCBox.text = "";
-        dialogueBox.gameObject.SetActive(false);
-        buttonA.gameObject.SetActive(false);
-        buttonB.gameObject.SetActive(false);
-        buttonC.gameObject.SetActive(false);
-
-        if (buttonA != null)
-        {
-            buttonA.onClick.AddListener(promptAPressed);
-        }
-        if (buttonB != null)
-        {
-            buttonB.onClick.AddListener(promptBPressed);
-        }
-        if (buttonB != null)
-        {
-            buttonB.onClick.AddListener(promptCPressed);
-        }
-
-        //TEXT TEST. Remove when unneeded.
-        dialogueBox.gameObject.SetActive(true);
-        WriteText("Testing to see if this text scrolls, one character at a time, " +
-            "depending on the scroll speed. Using inputs it is possible to speed up or skip text, " +
-            "though I don't know the VR controller inputs so all of the code reliant on it is commented in the script. " +
-            "Change the script and add anything to make each prompt work; you can fit all dialogue in the TextBoxes script. " +
-            "The TextBoxes script is on the Canvas itself." +
-            "You can even add a text speed setting from the menu if you want. I don't have an idea of how to do text pauses, unfortunately. " +
-            "You could, I suppose, if you were insanely meticulous. At every textCrawl count you COULD switchcase " +
-            "every single dialogueTextID and nested prompt ID and have a counter to determine exactly when there should be pauses and another varaible for how long the pauses are." +
-            "I don't recommend this solution though. And hey, this has successfully tested the size of the text box. If you want less text, " +
-            "you can of course resize the text box.");
-        buttonA.gameObject.SetActive(true);
-        buttonB.gameObject.SetActive(true);
-        buttonC.gameObject.SetActive(true);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void SetChoicesActive(bool active)
     {
-        if (textCrawl > 0)
+        foreach (var btn in buttons)
+            if (btn != null)
+                btn.gameObject.SetActive(active);
+    }
+
+    private void UpdateButtonSelection()
+    {
+        for (int i = 0; i < buttons.Length; i++)
         {
-            textCrawl -= textSpeed;
-            scrollingText = textReference.Substring(0, Mathf.FloorToInt(textCrawlC - textCrawl));
-            dialogueBox.text = scrollingText;
-
-            //Add a sound if you want to.
-            /*
-            textBlipInterval2 = textBlipInterval1;
-            textBlipInterval1 = Mathf.FloorToInt(textCrawlC - textCrawl);
-            if (textBlipInterval1 != textBlipInterval2)
-            {
-                textBlipSFX.Play();                
-            }*/
-        }
-
-
-
-        //Add inputs here. The first is to speed up text, the second is to fill out the text.
-
-        if (textCrawl > 0)
-        {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.A))
-            {
-                textSpeed = 2 * textSpeedC;
-            }
-            else
-            {
-                textSpeed = textSpeedC;
-            }
-            if (UnityEngine.Input.GetKeyDown(KeyCode.S))
-            {
-                textCrawl = 1;
-            }
-        }
-        else
-        {
-
-            //If the text has concluded, the same inputs should advance to the next text, unless there are prompts of course.
-            if ((UnityEngine.Input.GetKeyDown(KeyCode.A) || UnityEngine.Input.GetKeyDown(KeyCode.S)) && !promptsActive)
-            {
-
-                dialogueTextID++;
-
-                switch (dialogueTextID) //Your conditionals for all the text can occur here such as a counter.
-                {
-                    case 0: //In each case you have to change all prompts. Either write to or hide/unhide each of these.
-                        WriteText("INSERT DIALOGUE HERE");
-                        HideDialogue(false);
-                        WritePromptA("");
-                        HidePromptA(true);
-                        WritePromptB("");
-                        HidePromptB(true);
-                        WritePromptC("");
-                        HidePromptC(true);
-                        promptsActive = false;
-                        break;
-                    case 1:
-                        WriteText("YOU CAN HAVE DIALOGUE AND PROMPTS AT THE SAME TIME");
-                        HideDialogue(false);
-                        WritePromptA("Oh");
-                        HidePromptA(false);
-                        WritePromptB("Eh");
-                        HidePromptB(false);
-                        WritePromptC("That's boring!");
-                        HidePromptC(false);
-                        promptsActive = true;
-                        break;
-                    case 2:
-                        WriteText("YOU CAN HAVE DIALOGUE AND PROMPTS AT THE SAME TIME");
-                        HideDialogue(false);
-                        WritePromptA("Oh");
-                        HidePromptA(false);
-                        WritePromptB("Eh");
-                        HidePromptB(false);
-                        WritePromptC("That's boring!");
-                        HidePromptC(false);
-                        promptsActive = true;
-                        break;
-                    case 3: //If there were prompts in the PREVIOUS message, they are checked for here to display different text.
-                        switch (pressedButtonID)
-                        {
-                            case 0: WriteText("This text should not appear."); break;
-                            case 1:
-                                WriteText("INSERT PROMPT A RESPONSE HERE"); //You can also do things to other variables like obtaining items bools or anything.
-                                HideDialogue(false); //You can do nested prompts, just set the dialoguePathID and track that in a nested switchcase in the next messages.
-                                WritePromptA("");
-                                HidePromptA(true);
-                                WritePromptB("");
-                                HidePromptB(true);
-                                WritePromptC("");
-                                HidePromptC(true);
-                                promptsActive = false;
-                                break;
-                            case 2:
-                                WriteText("INSERT PROMPT B RESPONSE HERE");
-                                HideDialogue(false);
-                                WritePromptA("");
-                                HidePromptA(true);
-                                WritePromptB("");
-                                HidePromptB(true);
-                                WritePromptC("");
-                                HidePromptC(true);
-                                promptsActive = false;
-                                break;
-                            case 3:
-                                WriteText("INSERT PROMPT C RESPONSE HERE");
-                                HideDialogue(false);
-                                WritePromptA("");
-                                HidePromptA(true);
-                                WritePromptB("");
-                                HidePromptB(true);
-                                WritePromptC("");
-                                HidePromptC(true);
-                                promptsActive = false;
-                                break;
-                        }
-                        break;
-                    case 4:
-
-                        switch (pressedButtonID)
-                        {
-                            case 0: WriteText("This text should not appear."); break;
-                            case 1:
-                                switch (dialoguePathID)
-                                {
-                                    case 1: //Copy over all the settings, I'm leaving this blank to save space.
-                                        break;
-                                    case 2:
-                                        break;
-                                    case 3:
-                                        break;
-                                }
-                                break;
-                            case 2:
-                                switch (dialoguePathID)
-                                {
-                                    case 1:
-                                        break;
-                                    case 2:
-                                        break;
-                                    case 3:
-                                        break;
-                                }
-                                break;
-                            case 3:
-                                switch (dialoguePathID)
-                                {
-                                    case 1:
-                                        break;
-                                    case 2:
-                                        break;
-                                    case 3:
-                                        break;
-                                }
-                                break;
-                        }
-                        break;
-                    case 5:
-                        pressedButtonID = 0; //Set pressedButtonID to 0 when you are DONE with a nested prompt. If you need a nested prompt within a nested prompt, you need another ID variable and so on.
-                        break;
-                    case 6: break;
-                    case 7: break;
-
-
-                }
-            }
+            if (buttons[i] == null) continue;
+            ColorBlock colors = buttons[i].colors;
+            colors.normalColor = (i == selectedButtonIndex) ? Color.yellow : defaultButtonColor;
+            buttons[i].colors = colors;
         }
     }
 
-    public void WriteText(string textContents)
+    private void SelectOption(string logMessage, string line1, string line2)
     {
-        textCrawlC = textContents.Length;
-        textCrawl = textCrawlC;
-        textReference = textContents;
+        Debug.Log($"Option selected: {logMessage}");
+        HideChoices();
+        dialogueLines = new string[] { line1, line2 };
+        currentLine = 0;
+        ShowNextLine();
     }
-
-    public void WritePromptA(string textContents)
-    {
-        promptABox.text = textContents;
-    }
-    public void WritePromptB(string textContents)
-    {
-        promptBBox.text = textContents;
-    }
-    public void WritePromptC(string textContents)
-    {
-        promptCBox.text = textContents;
-    }
-    public void SetTextSpeed(int speed) 
-    {
-        textSpeedC = speed;
-    }
-
-    public void HideDialogue(bool flip)
-    {
-        dialogueBox.gameObject.SetActive(flip);
-    }
-    public void HidePromptA(bool flip)
-    {
-        promptABox.gameObject.SetActive(flip);
-    }
-    public void HidePromptB(bool flip)
-    {
-        promptBBox.gameObject.SetActive(flip);
-    }
-    public void HidePromptC(bool flip)
-    {
-        promptCBox.gameObject.SetActive(flip);
-    }
-    public void promptAPressed()
-    {
-        if (pressedButtonID == 0) //If you want nested nested prompts, you have to nest this if-statement as well to set every split path.
-        {
-            pressedButtonID = 1;
-        } else
-        {
-            dialoguePathID = 1;
-        }
-        promptsActive = false;
-        //pressButtonASFX.Play();
-    }
-    public void promptBPressed()
-    {
-        if (pressedButtonID == 0)
-        {
-            pressedButtonID = 2;
-        }
-        else
-        {
-            dialoguePathID = 2;
-        }
-        promptsActive = false;
-        //pressButtonBSFX.Play();
-    }
-    public void promptCPressed()
-    {
-        if (pressedButtonID == 0)
-        {
-            pressedButtonID = 3;
-        }
-        else
-        {
-            dialoguePathID = 3;
-        }
-        promptsActive = false;
-        //pressButtonCSFX.Play();
-    }
-
 }

@@ -8,6 +8,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Interrogate.unity
+    guid: cfb536578ac3c71418be5d49f907c305
+  - enabled: 1
+    path: Assets/Scenes/Case Closed.unity
+    guid: 8b5abf25c8fa5ab4bb3319a5b904706a
+  - enabled: 1
+    path: Assets/Scenes/You Are Fired.unity
+    guid: 2c1377bc1de84e94480ba48b184416c9
+  - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: 6637996dfc4959e4e9939a6563db1ba4
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 07fe94b31483279429b7df05b6dd092d, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
